@@ -35,12 +35,24 @@ var merged = data.merge(buffer);
 // get territory names
 var communityNames = data.aggregate_array('Comunidade').getInfo();
 var communityNames = communityNames.slice(0,1);    // get a subset of the three first entries to test
-print(communityNames);
 
 // plot data
 Map.addLayer(data, {}, 'comunities', false);
 Map.addLayer(buffer, {}, 'buffer', false);
 Map.addLayer(merged, {}, 'merged', false);
+
+// -- * // Define a function to convert the string column to a number
+function stringToNumber(feature) {
+  // Get the string value of the column
+  var stringValue = feature.get("id");
+  
+  // Convert the string to a number using ee.Number.parse()
+  var numberValue = ee.Number.parse(stringValue);
+  
+  // Return the feature with the number value set
+  return feature.set("ID", numberValue);
+}
+
 
 // for each community/territory
 communityNames.forEach(function(index) {
@@ -64,16 +76,6 @@ communityNames.forEach(function(index) {
 
 
 
-// Define function to compute areas for each polygon/geometry
-
-var getArea = function(feature) {
-  // create a image with the feature 
-  var featureImage = ee.Image(1).clip(feature);
-  
-  
-}
-
-
 
 
 // 
@@ -84,17 +86,7 @@ var getArea = function(feature) {
 
 /*
 
-// Define a function to convert the string column to a number
-function stringToNumber(feature) {
-  // Get the string value of the column
-  var stringValue = feature.get("id");
-  
-  // Convert the string to a number using ee.Number.parse()
-  var numberValue = ee.Number.parse(stringValue);
-  
-  // Return the feature with the number value set
-  return feature.set("ID", numberValue);
-}
+
 
 // Map the conversion function over the FeatureCollection
 var numericEntry = entry.map(stringToNumber);
