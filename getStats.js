@@ -40,7 +40,7 @@ Map.addLayer(merged, {}, 'merged', false);
 
 
 // Define function to compute areas for each polygon/geometry
-var x = merged.limit(3).aside(print);
+var x = merged.limit(3).aside(print); // get a subset of the three first entries to test 
 
 var getArea = function(feature) {
   
