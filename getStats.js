@@ -32,29 +32,47 @@ var buffer = ee.FeatureCollection(buffer.map(eraseOverlap));
 // merge territories and buffer zones
 var merged = data.merge(buffer);
 
+// get territory names
+var communityNames = data.aggregate_array('Comunidade').getInfo();
+var communityNames = communityNames.slice(0,1);    // get a subset of the three first entries to test
+print(communityNames);
 
+// plot data
 Map.addLayer(data, {}, 'comunities', false);
 Map.addLayer(buffer, {}, 'buffer', false);
 Map.addLayer(merged, {}, 'merged', false);
 
+// for each community/territory
+communityNames.forEach(function(index) {
+  // read community [i]
+  var community_i = merged.filterMetadata('Comunidade', 'equals', index);
+  
+  print(community_i)
+});
+
+
+
 
 
 // Define function to compute areas for each polygon/geometry
-var x = merged.limit(3).aside(print); // get a subset of the three first entries to test 
 
 var getArea = function(feature) {
+  // create a image with the feature 
+  var featureImage = ee.Image(1).clip(feature);
+  
   
 }
 
 
-// get files to bem processed
-//var tnm = ee.FeatureCollection('users/dh-conciani/help/tonomapa/tnm_abr23_final');
-//var buffer = ee.FeatureCollection('users/dh-conciani/help/tonomapa/erased_buffer_tnp_abr23_final')
+
+
+// 
+//Map.addLayer(x.first().geometry());
+//var z = ee.Image(1).clip(x.first()).aside(Map.addLayer);
+
+
 
 /*
-
-var entry = ee.FeatureCollection('users/dh-conciani/help/tonomapa/tnm_abr23_final');
-Map.addLayer(entry)
 
 // Define a function to convert the string column to a number
 function stringToNumber(feature) {
