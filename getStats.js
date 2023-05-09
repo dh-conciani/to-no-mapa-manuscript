@@ -72,6 +72,9 @@ function stringToNumber(feature) {
   return feature.set("ID", numberValue);
 }
 
+// create empty recipe
+var recipe = ee.FeatureCollection([]);
+
 // for each community/territory
 communityNames.forEach(function(index) {
   
@@ -86,90 +89,75 @@ communityNames.forEach(function(index) {
   Map.addLayer(territory.randomVisualizer());
   
   // get geometry bounds
-  var geometry = community_i.geometry().aside(Map.addLayer);
+  var geometry = community_i.geometry();
   
+  // convert a complex object to a simple feature collection 
+  var convert2table = function (obj) {
+    obj = ee.Dictionary(obj);
+      var territory = obj.get('territory');
+      var classesAndAreas = ee.List(obj.get('groups'));
+      
+      var tableRows = classesAndAreas.map(
+          function (classAndArea) {
+              classAndArea = ee.Dictionary(classAndArea);
+              var classId = classAndArea.get('class');
+              var area = classAndArea.get('sum');
+              var tableColumns = ee.Feature(null)
+                  .set('territory', territory)
+                  .set('class_id', classId)
+                  .set('area', area)
+                  .set('community', index);
+                  
+              return tableColumns;
+          }
+      );
   
+      return ee.FeatureCollection(ee.List(tableRows));
+  };
   
+  // compute the area
+  var calculateArea = function (image, territory, geometry) {
+      var territotiesData = pixelArea.addBands(territory).addBands(image)
+          .reduceRegion({
+              reducer: ee.Reducer.sum().group(1, 'class').group(1, 'territory'),
+              geometry: geometry,
+              scale: scale,
+              maxPixels: 1e12
+          });
+          
+      territotiesData = ee.List(territotiesData.get('groups'));
+      var areas = territotiesData.map(convert2table);
+      areas = ee.FeatureCollection(areas).flatten();
+      return areas;
+  };
   
-  print(territory)
+  // perform per year 
+  var areas = years.map(
+      function (year) {
+          var image = collection.select('classification_' + year);
+          var areas = calculateArea(image, territory, geometry);
+          // set additional properties
+          areas = areas.map(
+              function (feature) {
+                  return feature.set('year', year);
+              }
+          );
+          return areas;
+      }
+  );
+  
+  // store
+  areas = ee.FeatureCollection(areas).flatten();
+  recipe = recipe.merge(areas);
 });
 
+// flatten data
+recipe = recipe.flatten();
 
-
-
-
-
-
-/*
-
-
-
-
-
-// Geometry to export
-var geometry = asset_i.geometry();
-
-// convert a complex object to a simple feature collection 
-var convert2table = function (obj) {
-  obj = ee.Dictionary(obj);
-    var territory = obj.get('territory');
-    var classesAndAreas = ee.List(obj.get('groups'));
-    
-    var tableRows = classesAndAreas.map(
-        function (classAndArea) {
-            classAndArea = ee.Dictionary(classAndArea);
-            var classId = classAndArea.get('class');
-            var area = classAndArea.get('sum');
-            var tableColumns = ee.Feature(null)
-                .set('territory', territory)
-                .set('class_id', classId)
-                .set('area', area)
-                
-            return tableColumns;
-        }
-    );
-
-    return ee.FeatureCollection(ee.List(tableRows));
-};
-
-// compute the area
-var calculateArea = function (image, territory, geometry) {
-    var territotiesData = pixelArea.addBands(territory).addBands(image)
-        .reduceRegion({
-            reducer: ee.Reducer.sum().group(1, 'class').group(1, 'territory'),
-            geometry: geometry,
-            scale: scale,
-            maxPixels: 1e12
-        });
-        
-    territotiesData = ee.List(territotiesData.get('groups'));
-    var areas = territotiesData.map(convert2table);
-    areas = ee.FeatureCollection(areas).flatten();
-    return areas;
-};
-
-// perform per year 
-var areas = years.map(
-    function (year) {
-        var image = asset_i.select(year + '-1_classification');
-        var areas = calculateArea(image, territory, geometry);
-        // set additional properties
-        areas = areas.map(
-            function (feature) {
-                return feature.set('year', year);
-            }
-        );
-        return areas;
-    }
-);
-
-areas = ee.FeatureCollection(areas).flatten();
-
+// export data
 Export.table.toDrive({
-    collection: areas,
-    description: 'comunidades',
+    collection: recipe,
+    description: 'test',
     folder: driverFolder,
     fileFormat: 'CSV'
 });
-
-*/
