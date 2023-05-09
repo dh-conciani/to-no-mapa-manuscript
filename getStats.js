@@ -54,7 +54,7 @@ var merged = data.merge(buffer);
 // -- *
 // get territory names
 var communityNames = data.aggregate_array('Comunidade').getInfo();
-var communityNames = communityNames.slice(0,1);    // get a subset of the three first entries to test
+//var communityNames = communityNames.slice(0,1);    // get a subset of the three first entries to test
 
 // plot data
 Map.addLayer(data, {}, 'comunities', false);
@@ -86,7 +86,7 @@ communityNames.forEach(function(index) {
     .blend(ee.Image(2).clip(community_i.filterMetadata('geometry_posit', 'equals', 'buffer_zone')))
     .rename('territory');
     
-  Map.addLayer(territory.randomVisualizer());
+  //Map.addLayer(territory.randomVisualizer());
   
   // get geometry bounds
   var geometry = community_i.geometry();
@@ -152,8 +152,6 @@ communityNames.forEach(function(index) {
 });
 
 // flatten data
-recipe = recipe.flatten();
-
 // export data
 Export.table.toDrive({
     collection: recipe,
