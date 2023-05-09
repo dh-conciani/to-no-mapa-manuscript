@@ -44,8 +44,18 @@ Map.addLayer(merged, {}, 'merged', false);
 
 // for each community/territory
 communityNames.forEach(function(index) {
+  
   // read community [i]
-  var community_i = merged.filterMetadata('Comunidade', 'equals', index);
+  var community_i = merged.filterMetadata('Comunidade', 'equals', index)//.aside(Map.addLayer);
+  
+  // convert it into an image (1= inner, 2= buffer zone)
+  var image_i = ee.Image(1).clip(community_i.filterMetadata('geometry_posit', 'equals', 'inner'))
+    .blend(
+      ee.Image(2).clip(community_i.filterMetadata('geometry_posit', 'equals', 'buffer_zone'))
+    );
+    
+    Map.addLayer(image_i.randomVisualizer());
+  
   
   print(community_i)
 });
