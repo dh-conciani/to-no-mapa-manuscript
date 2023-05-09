@@ -1,6 +1,9 @@
 // get area by territory 
 // dhemerson.costa@ipam.org.br
 
+// read collection of images in which areas will be computed
+var collection = ee.Image('projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1');
+
 // read input data
 var data = ee.FeatureCollection('users/dh-conciani/help/tonomapa/tnm_abr23_final')
   // insert 'inner' string as metadata
@@ -17,14 +20,31 @@ var buffer = data.map(function(feature){
   .set('geometry_posit', 'buffer_zone');
 });
 
-// remove overlaps among buffer zones and 
+// Create a function to perform the erase operation over buffers and communities/territories
+var eraseOverlap = function(feature) {
+  var diff = feature.geometry().difference(data.geometry(), ee.ErrorMargin(1));
+  return ee.Feature(diff, feature.toDictionary());
+};
+
+// apply the function
+var buffer = ee.FeatureCollection(buffer.map(eraseOverlap));
+
+// merge territories and buffer zones
+var merged = data.merge(buffer);
+
 
 Map.addLayer(data, {}, 'comunities', false);
 Map.addLayer(buffer, {}, 'buffer', false);
+Map.addLayer(merged, {}, 'merged', false);
 
 
-// read lulc data
-var lulc = ee.Image('projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1');
+
+// Define function to compute areas for each polygon/geometry
+var x = merged.limit(3).aside(print);
+
+var getArea = function(feature) {
+  
+}
 
 
 // get files to bem processed
