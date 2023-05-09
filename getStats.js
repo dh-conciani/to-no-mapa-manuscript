@@ -9,6 +9,13 @@ var collection = ee.Image('projects/mapbiomas-workspace/public/collection7_1/map
 var years = ee.List.sequence({'start': 1985, 'end': 2021, 'step': 1}).getInfo();
 // *-- 
 
+// -- *
+// compute areas in hectares
+var pixelArea = ee.Image.pixelArea().divide(10000);
+
+// change scale if you need (in meters)
+var scale = 30;
+
 // * --
 // define a Google Drive output folder 
 var driverFolder = 'AREA-EXPORT-TNM';
@@ -76,7 +83,12 @@ communityNames.forEach(function(index) {
     .blend(ee.Image(2).clip(community_i.filterMetadata('geometry_posit', 'equals', 'buffer_zone')))
     .rename('territory');
     
-    Map.addLayer(territory.randomVisualizer());
+  Map.addLayer(territory.randomVisualizer());
+  
+  // get geometry bounds
+  var geometry = community_i.geometry().aside(Map.addLayer);
+  
+  
   
   
   print(territory)
@@ -88,30 +100,11 @@ communityNames.forEach(function(index) {
 
 
 
-// 
-//Map.addLayer(x.first().geometry());
-//var z = ee.Image(1).clip(x.first()).aside(Map.addLayer);
-
-
-
 /*
 
 
-// change the scale if you need.
-var scale = 30;
 
 
-
-
-// for each file 
-// get the classification for the file[i] 
-var asset_i = ee.ImageCollection('projects/mapbiomas-workspace/TRANSVERSAIS/COLECAO7/agua')
-  .toBands()
-  .aside(print)
-  .selfMask();
-  
-// Image area in km2
-var pixelArea = ee.Image.pixelArea().divide(10000);
 
 // Geometry to export
 var geometry = asset_i.geometry();
