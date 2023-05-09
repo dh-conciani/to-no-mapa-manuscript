@@ -155,7 +155,7 @@ communityNames.forEach(function(index) {
 // export data
 Export.table.toDrive({
     collection: recipe,
-    description: 'test',
+    description: 'to-no-mapa-lulc',
     folder: driverFolder,
     fileFormat: 'CSV'
 });
