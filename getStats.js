@@ -1,9 +1,20 @@
 // get area by territory 
 // dhemerson.costa@ipam.org.br
 
+// -- * 
 // read collection of images in which areas will be computed
 var collection = ee.Image('projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1');
 
+// define the years to bem computed 
+var years = ee.List.sequence({'start': 1985, 'end': 2021, 'step': 1}).getInfo();
+// *-- 
+
+// * --
+// define a Google Drive output folder 
+var driverFolder = 'AREA-EXPORT-TNM';
+// * -- 
+
+// -- *
 // read input data
 var data = ee.FeatureCollection('users/dh-conciani/help/tonomapa/tnm_abr23_final')
   // insert 'inner' string as metadata
@@ -31,7 +42,9 @@ var buffer = ee.FeatureCollection(buffer.map(eraseOverlap));
 
 // merge territories and buffer zones
 var merged = data.merge(buffer);
+// * --
 
+// -- *
 // get territory names
 var communityNames = data.aggregate_array('Comunidade').getInfo();
 var communityNames = communityNames.slice(0,1);    // get a subset of the three first entries to test
@@ -40,36 +53,33 @@ var communityNames = communityNames.slice(0,1);    // get a subset of the three 
 Map.addLayer(data, {}, 'comunities', false);
 Map.addLayer(buffer, {}, 'buffer', false);
 Map.addLayer(merged, {}, 'merged', false);
+// * --
 
 // -- * // Define a function to convert the string column to a number
 function stringToNumber(feature) {
   // Get the string value of the column
   var stringValue = feature.get("id");
-  
   // Convert the string to a number using ee.Number.parse()
   var numberValue = ee.Number.parse(stringValue);
-  
   // Return the feature with the number value set
   return feature.set("ID", numberValue);
 }
-
 
 // for each community/territory
 communityNames.forEach(function(index) {
   
   // read community [i]
-  var community_i = merged.filterMetadata('Comunidade', 'equals', index)//.aside(Map.addLayer);
+  var community_i = merged.filterMetadata('Comunidade', 'equals', index);
   
   // convert it into an image (1= inner, 2= buffer zone)
-  var image_i = ee.Image(1).clip(community_i.filterMetadata('geometry_posit', 'equals', 'inner'))
-    .blend(
-      ee.Image(2).clip(community_i.filterMetadata('geometry_posit', 'equals', 'buffer_zone'))
-    );
+  var territory = ee.Image(1).clip(community_i.filterMetadata('geometry_posit', 'equals', 'inner'))
+    .blend(ee.Image(2).clip(community_i.filterMetadata('geometry_posit', 'equals', 'buffer_zone')))
+    .rename('territory');
     
-    Map.addLayer(image_i.randomVisualizer());
+    Map.addLayer(territory.randomVisualizer());
   
   
-  print(community_i)
+  print(territory)
 });
 
 
@@ -87,33 +97,11 @@ communityNames.forEach(function(index) {
 /*
 
 
-
-// Map the conversion function over the FeatureCollection
-var numericEntry = entry.map(stringToNumber);
-
-print(numericEntry);
-
-// define classification regions 
-var territory = numericEntry
-  .filter(ee.Filter.notNull(['ID']))
-  .reduceToImage({
-    properties: ['ID'],
-    reducer: ee.Reducer.first(),
-}).rename('territory');
-
-
-// plot regions
-Map.addLayer(territory.randomVisualizer());
-
-
 // change the scale if you need.
 var scale = 30;
 
-// define the years to bem computed 
-var years = ee.List.sequence({'start': 1985, 'end': 2021, 'step': 1}).getInfo();
 
-// define a Google Drive output folder 
-var driverFolder = 'AREA-EXPORT-TNM';
+
 
 // for each file 
 // get the classification for the file[i] 
