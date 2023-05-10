@@ -73,7 +73,7 @@ function stringToNumber(feature) {
 }
 
 // create empty recipe
-var recipe = ee.FeatureCollection([]);
+var counter = 0;
 
 // for each community/territory
 communityNames.forEach(function(index) {
@@ -148,14 +148,16 @@ communityNames.forEach(function(index) {
   
   // store
   areas = ee.FeatureCollection(areas).flatten();
-  recipe = recipe.merge(areas);
-});
-
-// flatten data
-// export data
-Export.table.toDrive({
-    collection: recipe,
-    description: 'to-no-mapa-lulc',
-    folder: driverFolder,
-    fileFormat: 'CSV'
+  
+  // add count
+  counter = counter + 1;
+  
+  // export data
+  Export.table.toDrive({
+      collection: areas,
+      description: counter,
+      folder: driverFolder,
+      fileFormat: 'CSV'
+  });
+  
 });
