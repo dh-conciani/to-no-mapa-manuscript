@@ -53,7 +53,7 @@ var merged = data.merge(buffer);
 
 // -- *
 // get territory names
-var communityNames = data.aggregate_array('nome_uc').getInfo();
+var communityNames = data.aggregate_array('OBJECTID').getInfo();
 var communityNames = communityNames.slice(0,1);    // get a subset of the three first entries to test
 
 // plot data
@@ -79,7 +79,7 @@ var counter = 0;
 communityNames.forEach(function(index) {
   
   // read community [i]
-  var community_i = merged.filterMetadata('nome_uc', 'equals', index);
+  var community_i = merged.filterMetadata('OBJECTID', 'equals', index);
   
   // convert it into an image (1= inner, 2= buffer zone)
   var territory = ee.Image(1).clip(community_i.filterMetadata('geometry_posit', 'equals', 'inner'))
@@ -88,7 +88,7 @@ communityNames.forEach(function(index) {
     
   //Map.addLayer(territory.randomVisualizer());
   
-  // get geometry bounds
+  // get geometry boundsma
   var geometry = community_i.geometry();
   
   // convert a complex object to a simple feature collection 
@@ -103,15 +103,10 @@ communityNames.forEach(function(index) {
               var classId = classAndArea.get('class');
               var area = classAndArea.get('sum');
               var tableColumns = ee.Feature(null)
-                  .set('obj_id', obj.get('OBJECTID'))
-                  .set('territory_name', index)
-                  .set('category', obj.get('categoria'))
+                  .set('objectid', index)
                   .set('condition', territory)
                   .set('class_id', classId)
-                  .set('area', area)
-                  .set('cd_meso', obj.get('CD_MESO'))
-                  .set('nm_meso', obj.get('NM_MESO'))
-                  .set('uf', obj.get('SIGLA_UF'));
+                  .set('area', area);
                   
               return tableColumns;
           }
@@ -160,7 +155,7 @@ communityNames.forEach(function(index) {
   // export data
   Export.table.toDrive({
       collection: areas,
-      description: counter,
+      description: index,
       folder: driverFolder,
       fileFormat: 'CSV'
   });
