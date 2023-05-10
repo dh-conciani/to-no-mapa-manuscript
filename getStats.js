@@ -23,7 +23,7 @@ var driverFolder = 'AREA-EXPORT-TNM';
 
 // -- *
 // read input data
-var data = ee.FeatureCollection('users/dh-conciani/help/tonomapa/tnm_abr23_final')
+var data = ee.FeatureCollection('users/dh-conciani/help/tonomapa/vecs_aps_meso')
   // insert 'inner' string as metadata
   .map(function(feature) {
     return (feature.set('geometry_posit', 'inner'));
@@ -37,7 +37,7 @@ var buffer = data.map(function(feature){
   // insert 'buffer' string as metadata
   .set('geometry_posit', 'buffer_zone');
 });
-
+print(buffer)
 // Create a function to perform the erase operation over buffers and communities/territories
 var eraseOverlap = function(feature) {
   var diff = feature.geometry().difference(data.geometry(), ee.ErrorMargin(1));
@@ -46,15 +46,15 @@ var eraseOverlap = function(feature) {
 
 // apply the function
 var buffer = ee.FeatureCollection(buffer.map(eraseOverlap));
-
+print(buffer);
 // merge territories and buffer zones
 var merged = data.merge(buffer);
 // * --
 
 // -- *
 // get territory names
-var communityNames = data.aggregate_array('Comunidade').getInfo();
-//var communityNames = communityNames.slice(0,1);    // get a subset of the three first entries to test
+var communityNames = data.aggregate_array('nome_uc').getInfo();
+var communityNames = communityNames.slice(0,1);    // get a subset of the three first entries to test
 
 // plot data
 Map.addLayer(data, {}, 'comunities', false);
@@ -79,7 +79,7 @@ var counter = 0;
 communityNames.forEach(function(index) {
   
   // read community [i]
-  var community_i = merged.filterMetadata('Comunidade', 'equals', index);
+  var community_i = merged.filterMetadata('nome_uc', 'equals', index);
   
   // convert it into an image (1= inner, 2= buffer zone)
   var territory = ee.Image(1).clip(community_i.filterMetadata('geometry_posit', 'equals', 'inner'))
@@ -103,10 +103,15 @@ communityNames.forEach(function(index) {
               var classId = classAndArea.get('class');
               var area = classAndArea.get('sum');
               var tableColumns = ee.Feature(null)
-                  .set('territory', territory)
+                  .set('obj_id', obj.get('OBJECTID'))
+                  .set('territory_name', index)
+                  .set('category', obj.get('categoria'))
+                  .set('condition', territory)
                   .set('class_id', classId)
                   .set('area', area)
-                  .set('community', index);
+                  .set('cd_meso', obj.get('CD_MESO'))
+                  .set('nm_meso', obj.get('NM_MESO'))
+                  .set('uf', obj.get('SIGLA_UF'));
                   
               return tableColumns;
           }
