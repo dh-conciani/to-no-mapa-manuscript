@@ -3,7 +3,7 @@
 // dhemerson.costa@ipam.org.br
 
 // input territories data as features
-var input = ee.FeatureCollection('users/dh-conciani/help/tonomapa/vecs_aps_meso').limit(2);
+var input = ee.FeatureCollection('users/dh-conciani/help/tonomapa/vecs_aps_meso')//.limit(2);
 
 // build auxiliary as image
 var input_image = ee.Image(1).clip(input);
