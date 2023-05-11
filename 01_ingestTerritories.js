@@ -32,32 +32,25 @@ var data = ee.ImageCollection(
     // remove overlaps with other territories
     image = image.where(image.eq(2).and(input_image.eq(1)), 0).selfMask();
     
-    return (image.rename('id_' + obj.toString()));
+    return (image);
   })
 );
 
-print(data)
-var x = data.toBands()
-print(x)
+print('raw', data);
 
-
-/*
 // convert to list
-var imageList = data.toList(data.size()).getInfo();
+var imageList = data.toList(data.size());
+print('list', imageList);
 
-// create a counter
-var counter = 0;
-
-// export each one
-imageList.forEach(function(image) {
-  counter = counter + 1;
-  
-    Export.image.toAsset({
-      image: image,
-      description: counter,
-      assetId: output + '/' + counter,
-      scale: 30,
-      region: image.geometry()
-    });
-})
-*/
+// export each image
+for (var i = 0; i < imageList.length().getInfo(); i++) {
+  var image = ee.Image(imageList.get(i));
+  var count = i + 1;
+  Export.image.toAsset({
+        image: image,
+        description: count.toString(),
+        assetId: output + '/' + count.toString(),
+        scale: 30,
+        region: image.geometry()
+      });
+}
