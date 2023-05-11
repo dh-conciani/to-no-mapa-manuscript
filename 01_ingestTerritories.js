@@ -25,10 +25,9 @@ var data = ee.ImageCollection(
       // and retain only difference (outer space)
       .difference(feature);
     // convert it to an image
-    var image = ee.Image(1).blend(
-      ee.Image(1).clip(feature))
-        .blend(ee.Image(2).clip(buffer))
-        .set('territory', obj);
+    var image = ee.Image(1).clip(feature)
+      .blend(ee.Image(2).clip(buffer))
+      .set('territory', obj);
     
     // remove overlaps with other territories
     image = image.where(image.eq(2).and(input_image.eq(1)), 0).selfMask();
@@ -50,10 +49,7 @@ for (var i = 0; i < imageList.length().getInfo(); i++) {
         image: image,
         description: count.toString(),
         assetId: output + '/' + count.toString(),
-        scale: 30,
-        region: image.geometry()
+        scale: 10,
+        //region: image.geometry()
       });
 }
-
-
-
