@@ -53,3 +53,20 @@ for (var i = 0; i < imageList.length().getInfo(); i++) {
         //region: image.geometry()
       });
 }
+
+/*
+// vec
+var vec = ee.FeatureCollection('users/dh-conciani/help/tonomapa/vecs_aps_meso');
+var files_vec = vec.aggregate_array('OBJECTID');
+print(files_vec);
+
+// image
+var image = ee.ImageCollection('users/dh-conciani/help/tonomapa/sites');
+// get files in the image collection
+var files_image = image.aggregate_array('territory');
+print(files_image);
+
+// Find the values that are unique 
+var uniqueValues = files_vec.filter(ee.Filter.inList('item', files_image).not()).distinct();
+print(uniqueValues);
+*/
