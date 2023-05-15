@@ -23,73 +23,16 @@ var driverFolder = 'AREA-EXPORT-TNM';
 
 // -- *
 // read input data
-var data = ee.FeatureCollection('users/dh-conciani/help/tonomapa/vecs_aps_meso')
-  // insert 'inner' string as metadata
-  .map(function(feature) {
-    return (feature.set('geometry_posit', 'inner'));
-  });
+var territories = ee.ImageCollection('users/dh-conciani/help/tonomapa/sites');
 
-// compute buffer zones
-var buffer = data.map(function(feature){
-  return (feature.buffer(10000)
-  // and retain only difference (outter feature)
-  .difference(feature))
-  // insert 'buffer' string as metadata
-  .set('geometry_posit', 'buffer_zone');
-});
-print(buffer)
-// Create a function to perform the erase operation over buffers and communities/territories
-var eraseOverlap = function(feature) {
-  var diff = feature.geometry().difference(data.geometry(), ee.ErrorMargin(1));
-  return ee.Feature(diff, feature.toDictionary());
-};
-
-// apply the function
-var buffer = ee.FeatureCollection(buffer.map(eraseOverlap));
-print(buffer);
-// merge territories and buffer zones
-var merged = data.merge(buffer);
-// * --
-
-// -- *
-// get territory names
-var communityNames = data.aggregate_array('OBJECTID').getInfo();
-var communityNames = communityNames.slice(0,1);    // get a subset of the three first entries to test
-
-// plot data
-Map.addLayer(data, {}, 'comunities', false);
-Map.addLayer(buffer, {}, 'buffer', false);
-Map.addLayer(merged, {}, 'merged', false);
-// * --
-
-// -- * // Define a function to convert the string column to a number
-function stringToNumber(feature) {
-  // Get the string value of the column
-  var stringValue = feature.get("id");
-  // Convert the string to a number using ee.Number.parse()
-  var numberValue = ee.Number.parse(stringValue);
-  // Return the feature with the number value set
-  return feature.set("ID", numberValue);
-}
-
-// create empty recipe
-var counter = 0;
-
-// for each community/territory
-communityNames.forEach(function(index) {
+// for each territory
+var computed = territories.map(function(image) {
   
-  // read community [i]
-  var community_i = merged.filterMetadata('OBJECTID', 'equals', index);
-  
-  // convert it into an image (1= inner, 2= buffer zone)
-  var territory = ee.Image(1).clip(community_i.filterMetadata('geometry_posit', 'equals', 'inner'))
-    .blend(ee.Image(2).clip(community_i.filterMetadata('geometry_posit', 'equals', 'buffer_zone')))
-    .rename('territory');
-    
-  //Map.addLayer(territory.randomVisualizer());
-  
+  // get territory
+  var territory = image;
+
   // get geometry boundsma
-  var geometry = community_i.geometry();
+  var geometry = image.geometry();
   
   // convert a complex object to a simple feature collection 
   var convert2table = function (obj) {
@@ -103,7 +46,7 @@ communityNames.forEach(function(index) {
               var classId = classAndArea.get('class');
               var area = classAndArea.get('sum');
               var tableColumns = ee.Feature(null)
-                  .set('objectid', index)
+                  .set('objectid', image.get('territory'))
                   .set('condition', territory)
                   .set('class_id', classId)
                   .set('area', area);
@@ -111,6 +54,8 @@ communityNames.forEach(function(index) {
               return tableColumns;
           }
       );
+      
+      
   
       return ee.FeatureCollection(ee.List(tableRows));
   };
@@ -149,15 +94,13 @@ communityNames.forEach(function(index) {
   // store
   areas = ee.FeatureCollection(areas).flatten();
   
-  // add count
-  counter = counter + 1;
-  
-  // export data
-  Export.table.toDrive({
-      collection: areas,
-      description: index,
+  return areas;
+});
+
+// export data
+Export.table.toDrive({
+      collection: ee.FeatureCollection(computed).flatten(),
+      description: 'areas-to-no-mapa',
       folder: driverFolder,
       fileFormat: 'CSV'
-  });
-  
 });
