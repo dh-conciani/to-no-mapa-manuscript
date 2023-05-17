@@ -34,7 +34,7 @@ var data = ee.ImageCollection(
     // remove overlaps with other territories
     image = image.where(image.eq(2).and(input_image.eq(1)), 0).selfMask();
     
-    return (image.rename(ee.String(obj)));
+    return (image.rename(ee.String(ee.Number(obj).int())));
   })
 );
 
