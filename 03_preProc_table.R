@@ -8,17 +8,46 @@ library(dplyr)
 options(scipen= 9e3)
 
 ## read table
-data <- read.csv('./tab/areas-to-no-mapa.csv')
+protected_areas <- read.csv('./tab/areas-to-no-mapa-protected-areas.csv')
+
+## insert territory type
+protected_areas$territory <- 'Protected Area'
+
+
+
+
+
+
+
+
+
+
+
+
+communities <- read.csv('./tab/areas-to-no-mapa-communities.csv')
+
+## insert territory type
+communities$territory <- 'Community'
+
+## remove undesirable columns (gee residuals)
+protected_areas <-  protected_areas[ , -which(names(protected_areas) %in% c("system.index",".geo"))]
+communities <-  communities[ , -which(names(communities) %in% c("system.index",".geo"))]
 
 ## import mapbiomas dictionary
 mapbiomas_dict <- read.csv('./dict/mapbiomas-dict-ptbr.csv', sep= ';')
 
-## remove undesirable columns (gee residuals)
-data <-  data[ , -which(names(data) %in% c("system.index",".geo"))]
 
-## translate condition (within or buffer)
-data$condition <- gsub(1, 'Within', 
-                       gsub(2, 'Buffer zone', data$condition))
+## read shapefile (to get names)
+vec <- as.data.frame(read_sf('./vec/AP_MesoRegiao.shp'))
+
+## get only interest colums
+vec <- vec %>% select('OBJECTID', 'nome_uc', 'esfera', 'grupo', 'categoria', 'NM_MESO', 'SIGLA_UF')
+
+## join tables
+x <- left_join(x= recipe, y= vec, by= c('objectid' = 'OBJECTID'))
+
+
+
 
 ## translate lulc class
 ## create recipe to translate mapbiomas classes
@@ -40,14 +69,12 @@ for (l in 1:length(unique(data$class_id))) {
   recipe <- rbind(recipe, z)
 }; rm(data, y, z, mapbiomas_dict)
 
-## read shapefile (to get names)
-vec <- as.data.frame(read_sf('./vec/AP_MesoRegiao.shp'))
 
-## get only interest colums
-vec <- vec %>% select('OBJECTID', 'nome_uc', 'esfera', 'grupo', 'categoria', 'NM_MESO', 'SIGLA_UF')
+## translate condition (within or buffer)
+data$condition <- gsub(1, 'Within', 
+                       gsub(2, 'Buffer zone', data$condition))
 
-## join tables
-x <- left_join(x= recipe, y= vec, by= c('objectid' = 'OBJECTID'))
+
 
 ## exportar
 write.csv(x, './to-no-mapa.csv')
