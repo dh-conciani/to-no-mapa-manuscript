@@ -25,18 +25,25 @@ protected_areas <- left_join(x= protected_areas, y= vec, by= c('objectid' = 'OBJ
 
 ##################### join communities table ##################################
 
-
-
-
-
-
-
-
-
 communities <- read.csv('./tab/areas-to-no-mapa-communities.csv')
 
 ## insert territory type
 communities$territory <- 'Community'
+
+## read communities shapefile
+vec <- as.data.frame(read_sf('./vec/communities.shp'))
+
+## selecy only desired columns
+vec <- vec %>% select('id_12', 'NM_MESO', 'SIGLA_UF', 'Comunidade')
+
+## join tables
+communities <- left_join(x= communities, y= vec, by= c('objectid' = 'id_12'))
+
+## empty temp files
+rm(vec)
+
+############# compatibilize tables ################
+
 
 ## remove undesirable columns (gee residuals)
 protected_areas <-  protected_areas[ , -which(names(protected_areas) %in% c("system.index",".geo"))]
