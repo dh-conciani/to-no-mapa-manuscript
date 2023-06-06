@@ -7,14 +7,23 @@ library(dplyr)
 ## avoid sci notes
 options(scipen= 9e3)
 
+######################## join protected areas table ##############################
 ## read table
 protected_areas <- read.csv('./tab/areas-to-no-mapa-protected-areas.csv')
 
 ## insert territory type
 protected_areas$territory <- 'Protected Area'
 
+## read protected areas shapefile
+vec <- as.data.frame(read_sf('./vec/protected_areas.shp'))
 
+## get only interest colums
+vec <- vec %>% select('OBJECTID', 'nome_uc', 'esfera', 'grupo', 'categoria', 'NM_MESO', 'SIGLA_UF')
 
+## join tables
+protected_areas <- left_join(x= protected_areas, y= vec, by= c('objectid' = 'OBJECTID'))
+
+##################### join communities table ##################################
 
 
 
@@ -37,14 +46,6 @@ communities <-  communities[ , -which(names(communities) %in% c("system.index","
 mapbiomas_dict <- read.csv('./dict/mapbiomas-dict-ptbr.csv', sep= ';')
 
 
-## read shapefile (to get names)
-vec <- as.data.frame(read_sf('./vec/AP_MesoRegiao.shp'))
-
-## get only interest colums
-vec <- vec %>% select('OBJECTID', 'nome_uc', 'esfera', 'grupo', 'categoria', 'NM_MESO', 'SIGLA_UF')
-
-## join tables
-x <- left_join(x= recipe, y= vec, by= c('objectid' = 'OBJECTID'))
 
 
 
