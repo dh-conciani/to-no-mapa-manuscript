@@ -26,21 +26,20 @@ var driverFolder = 'AREA-EXPORT-TNM';
 var input = ee.Image('users/dh-conciani/help/tonomapa/communities-image');
 
 
-// convert into a imageCollection
+// load meso-regions
+var meso = ee.FeatureCollection('users/dh-conciani/help/tonomapa/meso_Cerrado');
+
+// Make an image 
+var meso = meso.reduceToImage({
+    properties: ['CD_MESO'],
+    reducer: ee.Reducer.first()
+});
+
+Map.addLayer(meso.randomVisualizer())
+
+
 var territories = ee.ImageCollection([]);
 
-// Get the band names of the image.
-var bandNames = input.bandNames().getInfo();
-
-// Iterate through the band names.
-bandNames.forEach(function(name) {
-    // Select the current band as a separate image.
-    var bandImage = input.select(name).set({'territory': ee.String(name).split('_').get(1)});
-
-    // Add the band image to the ImageCollection.
-    territories = territories.merge(ee.ImageCollection([bandImage]));
-
-});
 
 print(territories)
 
