@@ -53,18 +53,14 @@ var territories = meso.updateMask(protected_area.neq(1))
 
 Map.addLayer(territories.randomVisualizer());
 
+print(territories);
 
-// 
-print(territories)
 
-// for each territory
-var computed = territories.map(function(image) {
-  
-  // get territory
-  var territory = image;
+
+  var territory = territories;
 
   // get geometry boundsma
-  var geometry = image.geometry();
+  var geometry = meso.geometry();
   
   // convert a complex object to a simple feature collection 
   var convert2table = function (obj) {
@@ -78,8 +74,7 @@ var computed = territories.map(function(image) {
               var classId = classAndArea.get('class');
               var area = classAndArea.get('sum');
               var tableColumns = ee.Feature(null)
-                  .set('objectid', image.get('territory'))
-                  .set('condition', territory)
+                  .set('CD_MESO', territory)
                   .set('class_id', classId)
                   .set('area', area);
                   
@@ -126,13 +121,11 @@ var computed = territories.map(function(image) {
   // store
   areas = ee.FeatureCollection(areas).flatten();
   
-  return areas;
-});
 
 // export data
 Export.table.toDrive({
-      collection: ee.FeatureCollection(computed).flatten(),
-      description: 'areas-to-no-mapa-comunidades',
+      collection: areas,
+      description: 'areas-to-no-mapa-meso-erased',
       folder: driverFolder,
       fileFormat: 'CSV'
 });
