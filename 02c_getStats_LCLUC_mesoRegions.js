@@ -34,7 +34,7 @@ var meso = ee.FeatureCollection('users/dh-conciani/help/tonomapa/meso_Cerrado')
   });
 
 // Make an image 
-var meso = meso.reduceToImage({
+var meso2 = meso.reduceToImage({
     properties: ['CD_MESO2'],
     reducer: ee.Reducer.first()
 });
@@ -48,7 +48,7 @@ var communities = ee.Image(1).clip(
   ee.FeatureCollection('users/dh-conciani/help/tonomapa/tnm_abr23_final')).unmask(0);
 
 // remove aps and communities from meso-regions
-var territories = meso.updateMask(protected_area.neq(1))
+var territories = meso2.updateMask(protected_area.neq(1))
            .updateMask(communities.neq(1));
 
 Map.addLayer(territories.randomVisualizer());
@@ -57,10 +57,10 @@ print(territories);
 
 
 
-  var territory = territories;
+var territory = territories;
 
-  // get geometry boundsma
-  var geometry = meso.geometry();
+// get geometry boundsma
+var geometry = meso.geometry();
   
   // convert a complex object to a simple feature collection 
   var convert2table = function (obj) {
