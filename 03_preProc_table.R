@@ -43,11 +43,23 @@ communities <- left_join(x= communities, y= vec, by= c('objectid' = 'id_12'))
 rm(vec)
 
 ############# compatibilize tables ################
+names(communities)[11] <- 'name'
+names(protected_areas)[9] <- 'name'
 
+## for each unique column in protected areas, insert the same with null values in communities
+toSet <- names(protected_areas[which(names(protected_areas) %in% names(communities) == FALSE)])
+
+for (i in 1:length(toSet)) {
+  communities[as.character(toSet[i])] <- NA
+}
+
+## bind data
+data <- rbind(communities, protected_areas)
+rm(communities, protected_areas)
 
 ## remove undesirable columns (gee residuals)
-protected_areas <-  protected_areas[ , -which(names(protected_areas) %in% c("system.index",".geo"))]
-communities <-  communities[ , -which(names(communities) %in% c("system.index",".geo"))]
+data <-  data[ , -which(names(data) %in% c("system.index",".geo"))]
+
 
 ## import mapbiomas dictionary
 mapbiomas_dict <- read.csv('./dict/mapbiomas-dict-ptbr.csv', sep= ';')
