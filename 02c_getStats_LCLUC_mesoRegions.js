@@ -51,13 +51,8 @@ var communities = ee.Image(1).clip(
 var territories = meso2.updateMask(protected_area.neq(1))
            .updateMask(communities.neq(1));
 
-Map.addLayer(territories.randomVisualizer());
-
-print(territories);
-
-
-
-var territory = territories;
+var territory = territories.rename('territory');
+Map.addLayer(territory.randomVisualizer());
 
 // get geometry boundsma
 var geometry = meso.geometry();
@@ -94,7 +89,7 @@ var geometry = meso.geometry();
               reducer: ee.Reducer.sum().group(1, 'class').group(1, 'territory'),
               geometry: geometry,
               scale: scale,
-              maxPixels: 1e12
+              maxPixels: 1e13
           });
           
       territotiesData = ee.List(territotiesData.get('groups'));
