@@ -60,14 +60,8 @@ rm(communities, protected_areas)
 ## remove undesirable columns (gee residuals)
 data <-  data[ , -which(names(data) %in% c("system.index",".geo"))]
 
-
 ## import mapbiomas dictionary
 mapbiomas_dict <- read.csv('./dict/mapbiomas-dict-ptbr.csv', sep= ';')
-
-
-
-
-
 
 ## translate lulc class
 ## create recipe to translate mapbiomas classes
@@ -91,10 +85,8 @@ for (l in 1:length(unique(data$class_id))) {
 
 
 ## translate condition (within or buffer)
-data$condition <- gsub(1, 'Within', 
-                       gsub(2, 'Buffer zone', data$condition))
-
-
+recipe$condition <- gsub(1, 'Within', 
+                       gsub(2, 'Buffer zone', recipe$condition))
 
 ## exportar
-write.csv(x, './to-no-mapa.csv')
+write.csv(recipe, './to-no-mapa-data.csv')
