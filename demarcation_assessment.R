@@ -4,6 +4,7 @@
 ## load libraries
 library(ggplot2)
 library(sf)
+library(ggrepel)
 
 ## read data
 data <- read.csv('./to-no-mapa-data.csv')
@@ -121,9 +122,41 @@ for (i in 1:length(pa_names)) {
   
 }
 
-summary(lm(as.numeric(mean_native_change) ~ as.factor(creation_label), data= recipe))
+## aggregate general
+summary_1 <- aggregate(x= list(mean_native_change= as.numeric(recipe$mean_native_change)),
+                  by= list(condition= recipe$condition,
+                           creation_label= recipe$creation_label,
+                           grupo = recipe$grupo),
+                  FUN= 'sum')
+
+
+## plot
+ggplot(data=summary_1, mapping= aes(x= grupo, y= (mean_native_change*-1)/1000, fill= creation_label)) +
+  geom_bar(stat='identity', position= 'dodge', alpha= 0.6) +
+  facet_wrap(~condition, scales= 'free_x') +
+  xlab(NULL) +
+  theme_bw() +
+  coord_flip() +
+  ylab('Desmatamento anual médio (hectares x 1000)') +
+  geom_text(aes(label = round((mean_native_change*-1)/1000, digits=1)), 
+            position = position_dodge(width=1),
+            vjust=1) +
+  scale_fill_manual('Periodo', values= c('skyblue1', 'salmon1'),
+                    labels= c('Depois da formalização', 
+                              'Antes da formalização'))
+
+
+
+
+
+
+
+
 
 ## plot before vs after
-ggplot(data= recipe, mapping= aes(y= as.numeric(mean_native_change))) +
-  facet_wrap(~NM_MESO) +
+ggplot(data= subset(recipe, condition == 'Within'), mapping= aes(x= as.numeric(mean_native_change))) +
+  geom_bar(stat='identity') +
+  facet_grid(creation_label~grupo, scales= 'free') +
   theme_bw()
+
+
