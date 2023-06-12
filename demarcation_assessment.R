@@ -146,11 +146,28 @@ ggplot(data=summary_1, mapping= aes(x= grupo, y= (mean_native_change*-1)/1000, f
                               'Antes da formalização'))
 
 
+## search regional patterns
+summary_2 <- aggregate(x= list(mean_native_change= as.numeric(recipe$mean_native_change)),
+                       by= list(condition= recipe$condition,
+                                creation_label= recipe$creation_label,
+                                grupo = recipe$grupo,
+                                NM_MESO = recipe$NM_MESO),
+                       FUN= 'sum')
 
-
-
-
-
+## plot
+ggplot(data=summary_2, mapping= aes(x= NM_MESO, y= (mean_native_change*-1)/1000, fill= creation_label)) +
+  geom_bar(stat='identity', position= 'dodge', alpha= 0.9) +
+  facet_grid(grupo~condition, scales= 'free') +
+  xlab(NULL) +
+  theme_bw() +
+  coord_flip() +
+  ylab('Desmatamento anual médio (hectares x 1000)') +
+  geom_text(aes(label = round((mean_native_change*-1)/1000, digits=1)), 
+            position = position_dodge(width=1),
+            vjust=1, size=2) +
+  scale_fill_manual('Periodo', values= c('skyblue1', 'salmon1'),
+                    labels= c('Depois da formalização', 
+                              'Antes da formalização'))
 
 
 ## plot before vs after
