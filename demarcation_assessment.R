@@ -315,6 +315,31 @@ ggplot(data= top, mapping= aes(x= reorder(name, change), y= change, fill= NM_MES
   geom_text(y= 0 , mapping=aes(label= paste0(round(change, digits=0), ' ha')), size=5) 
 
 ## now, remove APAS
+## get only within 
+x <- subset(summary_3_changes, condition == 'Within')
+
+## get top 10 changes
+y <- x[order(-x$change), ] [1:4 ,]
+z <- x[order(x$change), ] [1:4 ,]
+
+## bind negative and positive
+top <- rbind(y, z)
+
+## filter data for the top places
+top <- summary_3_changes[summary_3_changes$name %in% top$name, ]
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ## get top list for each case
