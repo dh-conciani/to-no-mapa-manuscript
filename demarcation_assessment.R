@@ -265,6 +265,95 @@ ggplot(data= summary_2_changes, mapping= aes(x= reorder(NM_MESO, change), y= cha
             size= 3)
 
 
+## make the ranking per area
+summary_3_changes <- as.data.frame(NULL)
+## for each area
+for (i in 1:length(unique(recipe$name))) {
+  ## get area i
+  x <- subset(recipe, name == unique(recipe$name)[i])
   
+  ## for each grupo 
+  for (j in 1:length(unique(x$condition))) {
+    y <- subset(x, condition == unique(x$condition)[j])
+    
+    ## multiple by -1 to get positive values
+    y$mean_native_change <- as.numeric(y$mean_native_change) * -1
+    
+    ## get absolute change
+    y$change <-  subset(y, creation_label == 'After')$mean_native_change - 
+      subset(y, creation_label == 'Before')$mean_native_change 
+    
+    ## get relative change
+    y$relative_change <- round((y$change / subset(y, creation_label == 'Before')$mean_native_change) * 100, digits=1)
+    
+    ## store
+    summary_3_changes <- rbind(summary_3_changes, y[1,])
+    
+  }
+}
+
+## get only within 
+x <- subset(summary_3_changes, condition == 'Within')
+
+## get top 10 changes
+y <- x[order(-x$change), ] [1:4 ,]
+z <- x[order(x$change), ] [1:4 ,]
+
+## bind negative and positive
+top <- rbind(y, z)
+
+## filter data for the top places
+top <- summary_3_changes[summary_3_changes$name %in% top$name, ]
+
+## plot
+ggplot(data= top, mapping= aes(x= reorder(name, change), y= change, fill= NM_MESO)) +
+  geom_bar(stat='identity') +
+  scale_fill_manual('Region', values=c('#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#800080', '#FFA500')) +
+  coord_flip() +
+  facet_wrap(~condition) +
+  theme_bw() +
+  geom_text(y= 0 , mapping=aes(label= paste0(round(change, digits=0), ' ha')), size=5) 
+
+## now, remove APAS
+
+
+## get top list for each case
+#for (i in 1:length(unique(summary_3_changes$)))
+
+# Sort the table by the greatest change value
+summary_3_changes [order(-summary_3_changes$change), ] [1:10 ,]
+summary_3_changes [order(summary_3_changes$change), ] [1:10 ,]
+
+
+## get interest regions
+c('Extremo Oeste Bahiano',
+'Leste Maranhense',
+'Oriental do Tocantins',
+'Norte de Minas',
+'Nordeste Mato-grossense')
+
+
+## plot
+## plot changes
+ggplot(data= summary_3_changes, mapping= aes(x= reorder(name, change), y= change, fill= NM_MESO)) +
+  geom_bar(stat='identity') +
+  facet_grid(condition~grupo, scales= 'free') +
+  coord_flip() +
+  theme_bw()
+  
+
+
+
+  geom_bar(stat='identity', alpha=0.7) +
+  scale_fill_manual('Deforestation rate', values=c('red', 'forestgreen'), labels=c('Increase', 'Decrease')) +
+  coord_flip() +
+  facet_grid(condition~grupo, scales= 'free') +
+  theme_bw() +
+  geom_hline(yintercept=0, col= 'gray') +
+  xlab(NULL) +
+  ylab('Changes in annual native vegetation net-balance (after - before) in hectares') +
+  geom_text(mapping=aes(y= 0,label= paste0(round(change, digits=0), ' ha ', '(', round(relative_change2, digits=0), '%)')),
+            size= 3)
+
 
 
