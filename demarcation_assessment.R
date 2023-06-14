@@ -254,9 +254,9 @@ summary_2_changes$relative_change2 <- ifelse(summary_2_changes$signal == FALSE,
 ## plot changes
 ggplot(data= summary_2_changes, mapping= aes(x= reorder(NM_MESO, change), y= change, fill= signal)) +
   geom_bar(stat='identity', alpha=0.7) +
-  scale_fill_manual('Deforestation rate', values=c('red', 'forestgreen'), labels=c('Increase', 'Decrease')) +
+  scale_fill_manual('Veg. loss', values=c('red', 'forestgreen'), labels=c('Increase', 'Decrease')) +
   coord_flip() +
-  facet_grid(condition~grupo, scales= 'free') +
+  facet_grid(grupo~condition, scales= 'free') +
   theme_bw() +
   geom_hline(yintercept=0, col= 'gray') +
   xlab(NULL) +
@@ -292,93 +292,35 @@ for (i in 1:length(unique(recipe$name))) {
   }
 }
 
-## get only within 
-x <- subset(summary_3_changes, condition == 'Within')
-
-## get top 10 changes
-y <- x[order(-x$change), ] [1:4 ,]
-z <- x[order(x$change), ] [1:4 ,]
-
-## bind negative and positive
-top <- rbind(y, z)
-
-## filter data for the top places
-top <- summary_3_changes[summary_3_changes$name %in% top$name, ]
-
-## plot
-ggplot(data= top, mapping= aes(x= reorder(name, change), y= change, fill= NM_MESO)) +
-  geom_bar(stat='identity') +
-  scale_fill_manual('Region', values=c('#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#800080', '#FFA500')) +
-  coord_flip() +
-  facet_wrap(~condition) +
-  theme_bw() +
-  geom_text(y= 0 , mapping=aes(label= paste0(round(change, digits=0), ' ha')), size=5) 
-
-## now, remove APAS
-## get only within 
-x <- subset(summary_3_changes, condition == 'Within')
-
-## get top 10 changes
-y <- x[order(-x$change), ] [1:4 ,]
-z <- x[order(x$change), ] [1:4 ,]
-
-## bind negative and positive
-top <- rbind(y, z)
-
-## filter data for the top places
-top <- summary_3_changes[summary_3_changes$name %in% top$name, ]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-## get top list for each case
-#for (i in 1:length(unique(summary_3_changes$)))
-
-# Sort the table by the greatest change value
-summary_3_changes [order(-summary_3_changes$change), ] [1:10 ,]
-summary_3_changes [order(summary_3_changes$change), ] [1:10 ,]
-
-
-## get interest regions
-c('Extremo Oeste Bahiano',
-'Leste Maranhense',
-'Oriental do Tocantins',
-'Norte de Minas',
-'Nordeste Mato-grossense')
-
-
-## plot
-## plot changes
-ggplot(data= summary_3_changes, mapping= aes(x= reorder(name, change), y= change, fill= NM_MESO)) +
-  geom_bar(stat='identity') +
-  facet_grid(condition~grupo, scales= 'free') +
-  coord_flip() +
-  theme_bw()
+## GET TOP 8 (four geatest and lowest) for each group of protecteds areas
+recipe <- as.data.frame(NULL)
+for (i in 1:length(unique(summary_3_changes$grupo))) {
+  ## get only within 
+  x <- subset(summary_3_changes, condition == 'Within' & grupo == unique(summary_3_changes$grupo)[i])
   
+  ## get top 10 changes
+  y <- x[order(-x$change), ] [1:4 ,]
+  z <- x[order(x$change), ] [1:4 ,]
+  
+  ## bind negative and positive
+  zi <- rbind(y, z)
+  
+  ## select 
+  zij <- summary_3_changes[summary_3_changes$name %in% zi$name, ]
+  
+  ## store
+  recipe <- rbind(recipe, zij)
+}
 
-
-
-  geom_bar(stat='identity', alpha=0.7) +
-  scale_fill_manual('Deforestation rate', values=c('red', 'forestgreen'), labels=c('Increase', 'Decrease')) +
+## plot
+ggplot(data= recipe, mapping= aes(x= reorder(name, change), y= change, fill= NM_MESO)) +
+  geom_bar(stat='identity') +
+  scale_fill_manual('Region', values=c('#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#800080', '#FFA500',
+                                       '#008000', '#FFC0CB', '#808080', '#800000', '#FFFF80')) +
   coord_flip() +
-  facet_grid(condition~grupo, scales= 'free') +
+  facet_grid(grupo~condition, scales= 'free') +
   theme_bw() +
-  geom_hline(yintercept=0, col= 'gray') +
-  xlab(NULL) +
+  geom_text(y= 0 , mapping=aes(label= paste0(round(change, digits=0), ' ha')), size=4) +
   ylab('Changes in annual native vegetation net-balance (after - before) in hectares') +
-  geom_text(mapping=aes(y= 0,label= paste0(round(change, digits=0), ' ha ', '(', round(relative_change2, digits=0), '%)')),
-            size= 3)
-
-
-
+  xlab(NULL) +
+  geom_hline(yintercept=0, col= 'red', linetype= 'dashed')
