@@ -8,6 +8,9 @@ library(ggrepel)
 library(tools)
 library(dplyr)
 
+## avoid sci notate
+options(scipen= 999)
+
 ## read data
 data <- read.csv('./to-no-mapa-data.csv')
 
@@ -191,6 +194,36 @@ summary_2 <- aggregate(x= list(mean_native_change= as.numeric(recipe$mean_native
                                 NM_MESO = recipe$NM_MESO),
                        FUN= 'sum')
 
+
+## get changes summary
+summary_2_changes <- as.data.frame(NULL)
+for (i in 1:length(unique(summary_1$grupo))) {
+  ## get group
+  x <- subset(summary_2, grupo == unique(summary_2$grupo)[i])
+  ## for each condition
+  for (j in 1:length(unique(x$condition))) {
+    y <- subset(x, condition == unique(x$condition)[j])
+    
+    ## for each region
+    for (k in 1:length(unique(y$NM_MESO))) {
+      z <- subset(y, NM_MESO == unique(y$NM_MESO)[k])
+      
+      ## multiple by -1 to get positive values
+      z$mean_native_change <- z$mean_native_change * -1
+      
+      ## get absolute change
+      z$change <-  subset(z, creation_label == 'After')$mean_native_change - 
+        subset(z, creation_label == 'Before')$mean_native_change 
+      
+      ## get relative change
+      z$relative_change <- round((z$change / subset(z, creation_label == 'Before')$mean_native_change) * 100, digits=1)
+      
+      ## store
+      summary_2_changes <- rbind(summary_2_changes, z[1,])
+    }
+  }
+}
+
 ## plot
 ggplot(data=summary_2, mapping= aes(x= NM_MESO, y= (mean_native_change*-1)/1000, fill= creation_label)) +
   geom_bar(stat='identity', position= 'dodge', alpha= 0.9) +
@@ -206,11 +239,25 @@ ggplot(data=summary_2, mapping= aes(x= NM_MESO, y= (mean_native_change*-1)/1000,
                     labels= c('Depois da formalização', 
                               'Antes da formalização'))
 
+## insert negative/positive labels
+summary_2_changes$signal <- sapply(summary_2_changes$change, function(x) x < 0)
 
-## plot before vs after
-ggplot(data= subset(recipe, condition == 'Within'), mapping= aes(x= as.numeric(mean_native_change))) +
-  geom_bar(stat='identity') +
-  facet_grid(creation_label~grupo, scales= 'free') +
-  theme_bw()
+# Remove the minus sign from numbers with FALSE operators
+summary_2_changes$relative_change2 <- ifelse(summary_2_changes$signal == FALSE, 
+                                             abs(summary_2_changes$relative_change), 
+                                             summary_2_changes$relative_change)
 
+
+## plot changes
+ggplot(data= summary_2_changes, mapping= aes(x= reorder(NM_MESO, change), y= change, fill= signal)) +
+  geom_bar(stat='identity', alpha=0.7) +
+  scale_fill_manual('Deforestation rate', values=c('red', 'forestgreen'), labels=c('Increase', 'Decrease')) +
+  coord_flip() +
+  facet_grid(condition~grupo, scales= 'free') +
+  theme_bw() +
+  geom_hline(yintercept=0, col= 'gray') +
+  xlab(NULL) +
+  ylab('Mean annual deforestation change [after vs. before formalization] in hectares x 1000') +
+  geom_text(mapping=aes(y= 0,label= paste0(round(change, digits=0), ' Kha ', '(', round(relative_change2, digits=0), '%)')),
+            size= 3)
 
