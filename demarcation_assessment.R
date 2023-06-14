@@ -195,6 +195,22 @@ summary_2 <- aggregate(x= list(mean_native_change= as.numeric(recipe$mean_native
                        FUN= 'sum')
 
 
+## plot
+ggplot(data=summary_2, mapping= aes(x= NM_MESO, y= (mean_native_change*-1)/1000, fill= creation_label)) +
+  geom_bar(stat='identity', position= 'dodge', alpha= 0.9) +
+  facet_grid(grupo~condition, scales= 'free') +
+  xlab(NULL) +
+  theme_bw() +
+  coord_flip() +
+  ylab('Desmatamento anual médio (hectares x 1000)') +
+  geom_text(aes(label = round((mean_native_change*-1)/1000, digits=1)), 
+            position = position_dodge(width=1),
+            vjust=1, size=2) +
+  scale_fill_manual('Periodo', values= c('skyblue1', 'salmon1'),
+                    labels= c('Depois da formalização', 
+                              'Antes da formalização'))
+
+
 ## get changes summary
 summary_2_changes <- as.data.frame(NULL)
 for (i in 1:length(unique(summary_1$grupo))) {
@@ -224,20 +240,7 @@ for (i in 1:length(unique(summary_1$grupo))) {
   }
 }
 
-## plot
-ggplot(data=summary_2, mapping= aes(x= NM_MESO, y= (mean_native_change*-1)/1000, fill= creation_label)) +
-  geom_bar(stat='identity', position= 'dodge', alpha= 0.9) +
-  facet_grid(grupo~condition, scales= 'free') +
-  xlab(NULL) +
-  theme_bw() +
-  coord_flip() +
-  ylab('Desmatamento anual médio (hectares x 1000)') +
-  geom_text(aes(label = round((mean_native_change*-1)/1000, digits=1)), 
-            position = position_dodge(width=1),
-            vjust=1, size=2) +
-  scale_fill_manual('Periodo', values= c('skyblue1', 'salmon1'),
-                    labels= c('Depois da formalização', 
-                              'Antes da formalização'))
+
 
 ## insert negative/positive labels
 summary_2_changes$signal <- sapply(summary_2_changes$change, function(x) x < 0)
@@ -257,7 +260,11 @@ ggplot(data= summary_2_changes, mapping= aes(x= reorder(NM_MESO, change), y= cha
   theme_bw() +
   geom_hline(yintercept=0, col= 'gray') +
   xlab(NULL) +
-  ylab('Mean annual deforestation change [after vs. before formalization] in hectares x 1000') +
-  geom_text(mapping=aes(y= 0,label= paste0(round(change, digits=0), ' Kha ', '(', round(relative_change2, digits=0), '%)')),
+  ylab('Changes in annual native vegetation net-balance (after - before) in hectares') +
+  geom_text(mapping=aes(y= 0,label= paste0(round(change, digits=0), ' ha ', '(', round(relative_change2, digits=0), '%)')),
             size= 3)
+
+
+  
+
 
