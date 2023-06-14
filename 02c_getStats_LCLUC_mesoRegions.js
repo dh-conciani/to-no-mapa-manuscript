@@ -22,42 +22,15 @@ var driverFolder = 'AREA-EXPORT-TNM';
 // * -- 
 
 // -- *
-// read input data
-var input = ee.Image('users/dh-conciani/help/tonomapa/communities-image');
-
-
-// load meso-regions
-var meso = ee.FeatureCollection('users/dh-conciani/help/tonomapa/meso_Cerrado')
-  // convert id to numbers 
-  .map(function(feature) {
-    return feature.set('CD_MESO2', ee.Number.parse(feature.get('CD_MESO')));
-  });
-
-// Make an image 
-var meso2 = meso.reduceToImage({
-    properties: ['CD_MESO2'],
-    reducer: ee.Reducer.first()
-});
-
-// read protected areas and communities and convert to image
-var protected_area = ee.Image(1).clip(
-  ee.FeatureCollection('users/dh-conciani/help/tonomapa/vecs_aps_meso')).unmask(0);
-
-// read communities
-var communities = ee.Image(1).clip(
-  ee.FeatureCollection('users/dh-conciani/help/tonomapa/tnm_abr23_final')).unmask(0);
-
-// remove aps and communities from meso-regions
-var territories = meso2.updateMask(protected_area.neq(1))
-           .updateMask(communities.neq(1));
-
-var territory = territories.rename('territory');
+var territory =  ee.Image('users/dh-conciani/help/tonomapa/cerrado_meso_img_without_pas')
+  .rename('territory');
+  
 Map.addLayer(territory.randomVisualizer());
 
-// get geometry boundsma
-var geometry = meso.geometry();
+// get geometry bounds
+var geometry = territory.geometry();
   
-  // convert a complex object to a simple feature collection 
+  // convert a complex object to a simple feinature collection 
   var convert2table = function (obj) {
     obj = ee.Dictionary(obj);
       var territory = obj.get('territory');
