@@ -40,6 +40,8 @@ formal_filtered <- formal_filtered[- which(is.na(formal_filtered$NM_MESO)) ,]
 ## get protecteds areas
 pa_names <- unique(formal_filtered$name)
 
+# Filter to remove strings containing APAs
+#pa_names <- pa_names[!grepl("ÁREA DE PROTEÇÃO AMBIENTAL|AREA DE PROTECAO AMBIENTAL|APA|ÁREA DE PRESERVAÇÃO AMBIENTAL", pa_names)]
 
 ## create empry recipe
 recipe <- as.data.frame(NULL)
@@ -127,6 +129,7 @@ for (i in 1:length(pa_names)) {
   
 }
 
+
 ## translate communiti names
 recipe$grupo <- gsub('TI', 'Indigenous Land',
                    gsub('Quilombolas', 'Quilombolas',
@@ -176,9 +179,9 @@ ggplot(data=summary_1, mapping= aes(x= grupo, y= (mean_native_change*-1)/1000, f
   theme_bw() +
   coord_flip() +
   ylab('Mean annual deforestation (hectares x 1000)') +
-  #geom_text(aes(label = paste0(round((mean_native_change*-1)/1000, digits=1), 'Kha')), 
-  #          position = position_dodge(width=1),
-  #          vjust=1, hjust= 0.8) +
+  geom_text(aes(label = paste0(round((mean_native_change*-1)/1000, digits=1), 'Kha')), 
+            position = position_dodge(width=1),
+            vjust=1, hjust= 0.8) +
   scale_fill_manual('Protection formalization', values= c('skyblue1', 'salmon1'),
                     labels= c('After', 
                               'Before')) 
@@ -241,7 +244,6 @@ for (i in 1:length(unique(summary_1$grupo))) {
 }
 
 
-
 ## insert negative/positive labels
 summary_2_changes$signal <- sapply(summary_2_changes$change, function(x) x < 0)
 
@@ -293,7 +295,7 @@ for (i in 1:length(unique(recipe$name))) {
 }
 
 ## GET TOP 8 (four geatest and lowest) for each group of protecteds areas
-recipe <- as.data.frame(NULL)
+recipe2 <- as.data.frame(NULL)
 for (i in 1:length(unique(summary_3_changes$grupo))) {
   ## get only within 
   x <- subset(summary_3_changes, condition == 'Within' & grupo == unique(summary_3_changes$grupo)[i])
@@ -309,14 +311,14 @@ for (i in 1:length(unique(summary_3_changes$grupo))) {
   zij <- summary_3_changes[summary_3_changes$name %in% zi$name, ]
   
   ## store
-  recipe <- rbind(recipe, zij)
+  recipe2 <- rbind(recipe2, zij)
 }
 
 ## plot
-ggplot(data= recipe, mapping= aes(x= reorder(name, change), y= change, fill= NM_MESO)) +
+ggplot(data= recipe2, mapping= aes(x= reorder(name, change), y= change, fill= NM_MESO)) +
   geom_bar(stat='identity') +
-  scale_fill_manual('Region', values=c('#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#800080', '#FFA500',
-                                       '#008000', '#FFC0CB', '#808080', '#800000', '#FFFF80')) +
+  #scale_fill_manual('Region', values=c('#FF0000', '#00FF00', '#0000FF', '#FFFF00', '#FF00FF', '#00FFFF', '#800080', '#FFA500',
+  #                                     '#008000', '#FFC0CB', '#808080', '#800000', '#FFFF80')) +
   coord_flip() +
   facet_grid(grupo~condition, scales= 'free') +
   theme_bw() +
@@ -324,3 +326,4 @@ ggplot(data= recipe, mapping= aes(x= reorder(name, change), y= change, fill= NM_
   ylab('Changes in annual native vegetation net-balance (after - before) in hectares') +
   xlab(NULL) +
   geom_hline(yintercept=0, col= 'red', linetype= 'dashed')
+
