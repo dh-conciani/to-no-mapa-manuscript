@@ -40,7 +40,7 @@ Map.addLayer(territory.randomVisualizer());
 Export.image.toAsset({
 		image: territory,
     description: 'cerrado_meso_img_without_pas',
-    assetId: 'users/dh-conciani/help/tonomapa/collection/sites/meso_without_pas',
+    assetId: 'users/dh-conciani/help/tonomapa/collection_sites/meso_without_pas',
 //	pyramidingPolicy:,
 //	dimensions:,
     region: geometry,
