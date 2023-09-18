@@ -3,8 +3,7 @@
 // dhemerson.costa@ipam.org.br
 
 // input territories data as features
-var input = ee.FeatureCollection('users/dh-conciani/help/tonomapa/vecs_aps_meso')
-input = ee.FeatureCollection(input.toList(input.size()).slice(0, 400));
+var input = ee.FeatureCollection('users/dh-conciani/help/tonomapa/formal_aps_cerrado');
 
 // build auxiliary as image
 var input_image = ee.Image(1).clip(input);
@@ -14,14 +13,13 @@ Map.addLayer(input_image);
 var buffer_size = 10000;
 
 // set output imageCollection
-var output_folder = 'users/dh-conciani/help/tonomapa/';
-var output_name = 'protected-areas-image';
+var output = 'users/dh-conciani/help/tonomapa/collection_sites/protected_areas';
 
 // read input data
 var data = ee.ImageCollection(
   input.map(function(feature) {
     // get ocjectid
-    var obj = feature.get('OBJECTID');
+    var obj = feature.get('ID');
     // compute buffer zone
     var buffer = feature.buffer(buffer_size)
       // and retain only difference (outer space)
@@ -34,45 +32,30 @@ var data = ee.ImageCollection(
     // remove overlaps with other territories
     image = image.where(image.eq(2).and(input_image.eq(1)), 0).selfMask();
     
-    return (image.rename(ee.String(obj)));
+    return (image);
   })
 );
 
-// convert to img
-var img = data.toBands().toByte();
+print('raw', data);
 
-// Extract the values after underscore and rename the bands in 'img' variable
-var bands = img.bandNames();
-var renamedBands = bands.map(function(band) {
-  var bandName = ee.String(band)
-    .split('_').get(1);  // Extract the value after the underscore
 
-  return img.select([band]).rename([bandName]);
-});
+data
+  .aggregate_array('system:index')
+  .evaluate(function(list){
+    // print(list);
+    
+    list.forEach(function(index,count){
+      var image = data.filter('system:index == "'+index+'"')
+        .first();
+      // print('image',image);
+      Export.image.toAsset({
+        image: image,
+        description: '' + count,
+        assetId: output + '/' + count,
+        scale: 10,
+        maxPixels: 1e13
+        //region: image.geometry()
+      });
 
-// Create a new image with renamed bands
-var renamedImage = renamedBands.slice(1).iterate(function(image, previous) {
-  return ee.Image(previous).addBands(image);
-}, renamedBands.get(0));
-
-// Get the band names of the image
-var bandNames = ee.Image(renamedImage).bandNames();
-
-// Add prefix 'territory' to the start of each band name
-var prefixedBandNames = bandNames.map(function(band) {
-  return ee.String('territory_').cat(band);
-});
-
-// Rename the bands of the image with the prefixed names
-var renamedImage = ee.Image(renamedImage).rename(prefixedBandNames);
-var renameImage = ee.Image(renamedImage).toByte().aside(print);
-
-// stack into a single image
-Export.image.toAsset({
-  image: ee.Image(renamedImage), 
-  description: output_name,
-  assetId: output_folder + output_name,
-  //region: input.geometry(),
-  scale: 10, 
-  maxPixels: 1e13
-});
+    });
+  });
