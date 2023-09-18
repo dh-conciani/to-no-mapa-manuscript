@@ -23,7 +23,7 @@ Map.addLayer(meso2.randomVisualizer());
 
 // read protected areas and communities and convert to image
 var protected_area = ee.Image(1).clip(
-  ee.FeatureCollection('users/dh-conciani/help/tonomapa/protected_areas_with_date')).unmask(0);
+  ee.FeatureCollection('users/dh-conciani/help/tonomapa/formal_aps_cerrado')).unmask(0);
 
 // read communities
 var communities = ee.Image(1).clip(
@@ -40,7 +40,7 @@ Map.addLayer(territory.randomVisualizer());
 Export.image.toAsset({
 		image: territory,
     description: 'cerrado_meso_img_without_pas',
-    assetId: 'users/dh-conciani/help/tonomapa/cerrado_meso_img_without_pas',
+    assetId: 'users/dh-conciani/help/tonomapa/collection/sites/meso_without_pas',
 //	pyramidingPolicy:,
 //	dimensions:,
     region: geometry,
