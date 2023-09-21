@@ -11,37 +11,21 @@ library(dplyr)
 ## avoid sci notate
 options(scipen= 999)
 
-## read data
-data <- read.csv('./to-no-mapa-data.csv')
-
 ## get only forma cprotected areas
-formal <- subset(data, territory == 'Protected Area')
-
-## read creation date dataset
-creation <- as.data.frame(read_sf('./vec/protected_areas_with_date_joined.shp'))
-
-## join
-x <- left_join(x= formal, y=creation, by=c('objectid' = 'OBJECTID'))
-
-## insert only creation year 
-formal$creation_year <- x$Ano_fim
-rm(x, data)
-
-## remove NA, 0
-formal_filtered <- subset(formal, creation_year != 0)
+formal <- read.csv('./toRead/protected-areas.csv')
 
 ## retain only files with at least 10 years of data before creation 
-formal_filtered <- subset(formal, creation_year > 1995)
+formal_filtered <- subset(formal, Ano_fim > 1995)
+
+## retain only files with at least 10 years of data before creation 
+formal_filtered <- subset(formal_filtered, Ano_fim < 2012)
 
 ## ommit NM_MESO with NA
-formal_filtered <- formal_filtered[- which(is.na(formal_filtered$NM_MESO)) ,]
+#formal_filtered <- formal_filtered[- which(is.na(formal_filtered$NM_MESO)) ,]
 
 ## get deforestation before and after creation 
 ## get protecteds areas
-pa_names <- unique(formal_filtered$name)
-
-# Filter to remove strings containing APAs
-#pa_names <- pa_names[!grepl("ÁREA DE PROTEÇÃO AMBIENTAL|AREA DE PROTECAO AMBIENTAL|APA|ÁREA DE PRESERVAÇÃO AMBIENTAL", pa_names)]
+pa_names <- unique(formal_filtered$NOME)
 
 ## create empry recipe
 recipe <- as.data.frame(NULL)
@@ -49,7 +33,7 @@ recipe <- as.data.frame(NULL)
 ## for each protected area
 for (i in 1:length(pa_names)) {
   ## get pa x
-  pa_i <- subset(formal_filtered, name == pa_names[i])
+  pa_i <- subset(formal_filtered, NOME == pa_names[i])
   
   ## compute changes inside and outside PAs
   for (j in 1:length(unique(pa_i$condition))) {
@@ -58,8 +42,8 @@ for (i in 1:length(pa_names)) {
     pa_ij <- subset(pa_i, condition == unique(pa_i$condition)[j])
     
     ## segment into before and after
-    pa_ij_before <- subset(pa_ij, year < unique(pa_ij$creation_year))
-    pa_ij_after <- subset(pa_ij, year >= unique(pa_ij$creation_year))
+    pa_ij_before <- subset(pa_ij, year < unique(pa_ij$Ano_fim))
+    pa_ij_after <- subset(pa_ij, year >= unique(pa_ij$Ano_fim))
     
     ## add temporal labels
     pa_ij_before$creation_label <- 'Before'
@@ -96,6 +80,10 @@ for (i in 1:length(pa_names)) {
       ## compute native vegetation change 
       change <- subset(x, year == max(x$year))$area - subset(x, year == min(x$year))$area
       
+      ## normalize the loss by the ammount of vegetation  in the first year of the period
+      rel_change <- round((change / x[1,]$area) * 100, digits=1)
+      
+      
       ############## cmpute anthropogenic use increase
       #pa_ijk_ni <- subset(pa_ijk, class_level_0 == 'Anthropogenic use')
       
@@ -110,15 +98,15 @@ for (i in 1:length(pa_names)) {
       
       ## build table
       result_ijk <- as.data.frame(cbind(
-        name = unique(pa_ijk$name),
+        name = unique(pa_ijk$NOME),
         condition = unique(pa_ijk$condition),
-        grupo = unique(pa_ijk$grupo),
+        grupo = unique(pa_ijk$Categoria),
         NM_MESO = unique(pa_ijk$NM_MESO),
-        SIGLA_UF = unique(pa_ijk$SIGLA_UF),
         creation_label = unique(pa_ijk$creation_label),
         native_change  = change,
         n_years = unique(pa_ijk$n_years),
-        mean_native_change = change/unique(pa_ijk$n_years)
+        mean_native_change = change/unique(pa_ijk$n_years),
+        perc_loss_period = rel_change
       ))
      
       ## bind into recipe
@@ -132,9 +120,10 @@ for (i in 1:length(pa_names)) {
 
 ## translate communiti names
 recipe$grupo <- gsub('TI', 'Indigenous Land',
-                   gsub('Quilombolas', 'Quilombolas',
-                        gsub('Uso Sustentável', 'Sustainable Use',
-                             recipe$grupo)))
+                   gsub('Quilombo', 'Quilombo',
+                        gsub('RESEX', 'Sustainable Use',
+                             gsub('RDS', 'Sustainable Use',
+                                  recipe$grupo))))
 
 ## aggregate general
 summary_1 <- aggregate(x= list(mean_native_change= as.numeric(recipe$mean_native_change)),
@@ -166,10 +155,6 @@ for (i in 1:length(unique(summary_1$grupo))) {
     summary_1_changes <- rbind(summary_1_changes, y[1,])
   }
 }
-
-
-
-
 
 ## plot
 ggplot(data=summary_1, mapping= aes(x= grupo, y= (mean_native_change*-1)/1000, fill= creation_label)) +
