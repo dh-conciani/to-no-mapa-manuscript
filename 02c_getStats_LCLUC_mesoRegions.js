@@ -3,10 +3,10 @@
 
 // -- * 
 // read collection of images in which areas will be computed
-var collection = ee.Image('projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1');
+var collection = ee.Image('projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1');
 
 // define the years to bem computed 
-var years = ee.List.sequence({'start': 1985, 'end': 2021, 'step': 1}).getInfo();
+var years = ee.List.sequence({'start': 1985, 'end': 2022, 'step': 1}).getInfo();
 // *-- 
 
 // -- *
@@ -22,7 +22,7 @@ var driverFolder = 'AREA-EXPORT-TNM';
 // * -- 
 
 // -- *
-var territory =  ee.Image('users/dh-conciani/help/tonomapa/cerrado_meso_img_without_pas')
+var territory =  ee.Image('users/dh-conciani/help/tonomapa/collection_sites/meso_without_pas')
   .rename('territory');
   
 Map.addLayer(territory.randomVisualizer());
@@ -89,11 +89,10 @@ var geometry = territory.geometry();
   // store
   areas = ee.FeatureCollection(areas).flatten();
   
-
 // export data
 Export.table.toDrive({
       collection: areas,
-      description: 'areas-to-no-mapa-meso-erased',
+      description: 'meso-pa-erased',
       folder: driverFolder,
       fileFormat: 'CSV'
 });
