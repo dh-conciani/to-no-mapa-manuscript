@@ -3,10 +3,10 @@
 
 // -- * 
 // read collection of images in which areas will be computed
-var collection = ee.Image('projects/mapbiomas-workspace/public/collection7_1/mapbiomas_collection71_integration_v1');
+var collection = ee.Image('projects/mapbiomas-workspace/public/collection8/mapbiomas_collection80_integration_v1');
 
 // define the years to bem computed 
-var years = ee.List.sequence({'start': 1985, 'end': 2021, 'step': 1}).getInfo();
+var years = ee.List.sequence({'start': 1985, 'end': 2022, 'step': 1}).getInfo();
 // *-- 
 
 // -- *
@@ -23,7 +23,7 @@ var driverFolder = 'AREA-EXPORT-TNM';
 
 // -- *
 // read input data
-var territories = ee.ImageCollection('users/dh-conciani/help/tonomapa/sites');
+var territories = ee.ImageCollection('users/dh-conciani/help/tonomapa/collection_sites/protected_areas');
 
 // for each territory
 var computed = territories.map(function(image) {
@@ -100,7 +100,7 @@ var computed = territories.map(function(image) {
 // export data
 Export.table.toDrive({
       collection: ee.FeatureCollection(computed).flatten(),
-      description: 'areas-to-no-mapa',
+      description: 'protected-areas-lulcc',
       folder: driverFolder,
       fileFormat: 'CSV'
 });
