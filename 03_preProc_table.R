@@ -105,6 +105,48 @@ for (i in 1:length(unique(communities$class_id))) {
 ## export table
 write.csv(recipe, './toRead/communities.csv')
 
+############### meso regions
+## read table
+meso <- read.csv('./tab/col_8/meso-pa-erased.csv')
 
+## insert territory type
+meso$territory <- 'Meso-region'
 
+## read protected areas shapefile
+vec <- as.data.frame(read_sf('./vec/meso_regions.shp'))
 
+## selecy only desired columns
+vec <- vec %>% select('CD_MESO', 'NM_MESO', 'SIGLA_UF')
+
+## join tables
+meso$CD_MESO <- as.character(meso$CD_MESO)
+meso <- left_join(x= meso, y= vec, by= c('CD_MESO' = 'CD_MESO'))
+
+## empty temp files
+rm(vec)
+
+## remove undesirable columns (gee residuals)
+meso <-  meso[ , -which(names(meso) %in% c("system.index",".geo"))]
+
+## translate lulc class
+## create recipe to translate mapbiomas classes
+recipe <- as.data.frame(NULL)
+## for each tenure id
+for (i in 1:length(unique(meso$class_id))) {
+  ## for each unique value, get mean in n levels
+  y <- subset(mapbiomas_dict, id == unique(meso$class_id)[i])
+  ## select matched class
+  z <- subset(meso, class_id == unique(meso$class_id)[i])
+  ## apply translation 
+  z$class_level_0 <- gsub(paste0('^',y$id,'$'), y$mapb_0, z$class_id)
+  z$class_level_1 <- gsub(paste0('^',y$id,'$'), y$mapb_1, z$class_id)
+  z$class_level_1n <- gsub(paste0('^',y$id,'$'), y$mapb_1_2, z$class_id)
+  z$class_level_2 <- gsub(paste0('^',y$id,'$'), y$mapb_2, z$class_id)
+  z$class_level_3 <- gsub(paste0('^',y$id,'$'), y$mapb_3, z$class_id)
+  z$class_level_4 <- gsub(paste0('^',y$id,'$'), y$mapb_4, z$class_id)
+  ## bind into recipe
+  recipe <- rbind(recipe, z)
+}; rm(y, z)
+
+## export table
+write.csv(recipe, './toRead/meso.csv')
