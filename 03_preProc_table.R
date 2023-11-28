@@ -113,14 +113,15 @@ meso <- read.csv('./tab/col_8/meso-pa-erased.csv')
 meso$territory <- 'Meso-region'
 
 ## read protected areas shapefile
-vec <- as.data.frame(read_sf('./vec/meso_regions.shp'))
+#vec <- as.data.frame(read_sf('./vec/meso_regions.shp'))
+vec <- as.data.frame(read_sf('./vec/new/meso/meso_brasil.shp'))
 
 ## selecy only desired columns
 vec <- vec %>% select('CD_MESO', 'NM_MESO', 'SIGLA_UF')
 
 ## join tables
 meso$CD_MESO <- as.character(meso$CD_MESO)
-meso <- left_join(x= meso, y= vec, by= c('CD_MESO' = 'CD_MESO'))
+meso <- na.omit(left_join(x= meso, y= vec, by= c('CD_MESO' = 'CD_MESO')))
 
 ## empty temp files
 rm(vec)
@@ -149,4 +150,18 @@ for (i in 1:length(unique(meso$class_id))) {
 }; rm(y, z)
 
 ## export table
-write.csv(recipe, './toRead/meso.csv')
+write.csv(recipe, './toRead/meso-erased.csv')
+
+## build cerrado 
+x <- aggregate(x=list(area= recipe$area), by= list(
+  class_id = recipe$class_id,
+  year= recipe$year,
+  class_level_0= recipe$class_level_0,
+  class_level_1 = recipe$class_level_1,
+  class_level_1n = recipe$class_level_1n,
+  class_level_2 = recipe$class_level_2,
+  class_level_3 = recipe$class_level_3,
+  class_level_4 = recipe$class_level_4), FUN= 'sum')
+
+## export table
+write.csv(x, './toRead/cerrado-erased.csv')
